@@ -1,27 +1,27 @@
-import { StatusBar } from "expo-status-bar";
-import React from "react";
-import { StyleSheet, View, Button } from "react-native";
+import React, { useReducer } from "react";
+import { StatusBar, SafeAreaView, StyleSheet, View } from "react-native";
 import { SketchCanvas } from "./components/SketchCanvas";
+import { SketchList } from "./components/SketchList";
+import { reducer, initialState } from "./store";
 
 export default function App() {
-  const [isDrawing, setIsDrawing] = React.useState(true);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
-      {isDrawing ? (
-        <SketchCanvas
-          onSave={(img) => {
-            console.log("\n", img);
-            setIsDrawing(false);
-          }}
-          onDiscard={() => setIsDrawing(false)}
-        />
-      ) : (
-        <View style={styles.buttonWrapper}>
-          <Button title="Create sketch" onPress={() => setIsDrawing(true)} />
-        </View>
-      )}
+      <SafeAreaView style={styles.safeArea}>
+        {state.isDrawing ? (
+          <SketchCanvas
+            onSave={(svg) => {
+              dispatch({ type: "saveSketch", payload: { svg } });
+              dispatch({ type: "endSketch" });
+            }}
+            onDiscard={() => dispatch({ type: "endSketch" })}
+          />
+        ) : (
+          <SketchList sketches={state.sketches} dispatch={dispatch} />
+        )}
+      </SafeAreaView>
     </View>
   );
 }
@@ -31,9 +31,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  buttonWrapper: {
+  safeArea: {
     flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
+    marginTop: StatusBar.currentHeight || 0,
   },
 });
